@@ -1,11 +1,11 @@
 import OAuthProvider from '@cloudflare/workers-oauth-provider'
 
 import { createApiHandler } from '@repo/mcp-common/src/api-handler'
+import { handleApiTokenMode, isApiTokenRequest } from '@repo/mcp-common/src/api-token-mode'
 import {
 	createAuthHandlers,
 	handleTokenExchangeCallback,
 } from '@repo/mcp-common/src/cloudflare-oauth-handler'
-import { handleDevMode } from '@repo/mcp-common/src/dev-mode'
 import { getEnv } from '@repo/mcp-common/src/env'
 import { RequiredScopes } from '@repo/mcp-common/src/scopes'
 import { MetricsTracker } from '@repo/mcp-observability'
@@ -39,11 +39,8 @@ const ContainerScopes = {
 
 export default {
 	fetch: async (req: Request, env: Env, ctx: ExecutionContext) => {
-		if (
-			(env.ENVIRONMENT === 'dev' || env.ENVIRONMENT === 'test') &&
-			env.DEV_DISABLE_OAUTH === 'true'
-		) {
-			return await handleDevMode(ContainerMcpAgent, req, env, ctx)
+		if (await isApiTokenRequest(req, env)) {
+			return await handleApiTokenMode(ContainerMcpAgent, req, env, ctx)
 		}
 
 		return new OAuthProvider({

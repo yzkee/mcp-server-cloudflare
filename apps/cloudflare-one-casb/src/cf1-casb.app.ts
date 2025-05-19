@@ -1,11 +1,11 @@
 import OAuthProvider from '@cloudflare/workers-oauth-provider'
 import { McpAgent } from 'agents/mcp'
 
+import { handleApiTokenMode, isApiTokenRequest } from '@repo/mcp-common/src/api-token-mode'
 import {
 	createAuthHandlers,
 	handleTokenExchangeCallback,
 } from '@repo/mcp-common/src/cloudflare-oauth-handler'
-import { handleDevMode } from '@repo/mcp-common/src/dev-mode'
 import { getUserDetails, UserDetails } from '@repo/mcp-common/src/durable-objects/user_details.do'
 import { getEnv } from '@repo/mcp-common/src/env'
 import { RequiredScopes } from '@repo/mcp-common/src/scopes'
@@ -93,8 +93,8 @@ const CloudflareOneCasbScopes = {
 
 export default {
 	fetch: async (req: Request, env: Env, ctx: ExecutionContext) => {
-		if (env.ENVIRONMENT === 'development' && env.DEV_DISABLE_OAUTH === 'true') {
-			return await handleDevMode(CASBMCP, req, env, ctx)
+		if (await isApiTokenRequest(req, env)) {
+			return await handleApiTokenMode(CASBMCP, req, env, ctx)
 		}
 
 		return new OAuthProvider({

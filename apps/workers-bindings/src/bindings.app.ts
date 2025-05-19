@@ -1,11 +1,11 @@
 import OAuthProvider from '@cloudflare/workers-oauth-provider'
 import { McpAgent } from 'agents/mcp'
 
+import { handleApiTokenMode, isApiTokenRequest } from '@repo/mcp-common/src/api-token-mode'
 import {
 	createAuthHandlers,
 	handleTokenExchangeCallback,
 } from '@repo/mcp-common/src/cloudflare-oauth-handler'
-import { handleDevMode } from '@repo/mcp-common/src/dev-mode'
 import { getUserDetails, UserDetails } from '@repo/mcp-common/src/durable-objects/user_details.do'
 import { getEnv } from '@repo/mcp-common/src/env'
 import { RequiredScopes } from '@repo/mcp-common/src/scopes'
@@ -108,11 +108,9 @@ const BindingsScopes = {
 
 export default {
 	fetch: async (req: Request, env: Env, ctx: ExecutionContext) => {
-		if (
-			(env.ENVIRONMENT === 'development' || env.ENVIRONMENT === 'test') &&
-			env.DEV_DISABLE_OAUTH === 'true'
-		) {
-			return await handleDevMode(WorkersBindingsMCP, req, env, ctx)
+		if (await isApiTokenRequest(req, env)) {
+			console.log('is token mode')
+			return await handleApiTokenMode(WorkersBindingsMCP, req, env, ctx)
 		}
 
 		return new OAuthProvider({
