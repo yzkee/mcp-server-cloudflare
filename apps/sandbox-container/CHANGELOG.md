@@ -1,5 +1,11 @@
 # containers-mcp
 
+## 0.2.0
+
+### Minor Changes
+
+- 2621557: Use new workers:read scope instead of workers:write, as these mcp servers don't require workers write permissions
+
 ## 0.1.0
 
 ### Minor Changes
